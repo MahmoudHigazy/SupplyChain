@@ -1,13 +1,10 @@
-// SPDX-License-Identifier: GPL-3.0
-
 pragma solidity ^0.6.0;
 
 import "./ItemManager.sol";
 
 contract Item {
-
     uint public priceInWei;
-    uint public pricePaid;
+    uint public paidWei;
     uint public index;
 
     ItemManager parentContract;
@@ -19,14 +16,17 @@ contract Item {
     }
 
     receive() external payable {
-        require(pricePaid == 0, "Item is payed already!");
-        require(priceInWei == msg.value, "Only full payments accepted!");
-        pricePaid += msg.value;
+        require(msg.value == priceInWei, "We don't support partial payments");
+        require(paidWei == 0, "Item is already paid!");
+        paidWei += msg.value;
+
         (bool success, ) = address(parentContract).call{value:msg.value}(abi.encodeWithSignature("triggerPayment(uint256)", index));
-        require(success, "The transction wasn't succefull, Canceling ..");
+
+        require(success, "Delivery did not work");
     }
 
     fallback () external {
 
     }
+
 }
