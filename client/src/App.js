@@ -27,7 +27,8 @@ class App extends Component {
         Item.abi,
         Item.networks[networkId] && Item.networks[networkId].address,
       );
-
+      
+      this.listenToPaymentEvent();
       this.setState({loaded:true});
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -37,6 +38,17 @@ class App extends Component {
       console.error(error);
     }
   };
+
+  listenToPaymentEvent = () => {
+    let self = this;
+    this.itemManager.events.SupplyChainStep().on("data", async function(evt){
+      console.log(evt);
+      let itemObj = await self.itemManager.methods.items(evt.returnValues._itemIndex).call();
+      if (itemObj._step === "1") {
+        alert("Item "+itemObj._identifier+" was paid, deliver it now!");
+      }
+    });
+  }
 
   handleSubmit = async () => {
     const { cost, itemName } = this.state;
